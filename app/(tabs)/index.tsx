@@ -18,11 +18,15 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import Header from "@/components/Header";
 import React from "react";
-import { calculateTaxBreakDown } from "../utils/calculatorUtils";
+import {
+  calculateFullPayBreakdown,
+  calculateTaxBreakDown,
+} from "../utils/calculatorUtils";
+import { PERIODS } from "@/constants/Period";
 
 export default function HomeScreen() {
   const [salary, setSalary] = React.useState("");
-  const [timePeriod, setTimePeriod] = React.useState("Annually");
+  const [timePeriod, setTimePeriod] = React.useState(52);
   const [taxYear, setTaxYear] = React.useState("2023-2024");
   const [superPercentage, setSuperPercentage] = React.useState("11");
   const [includesSuper, setIncludesSuper] = React.useState(false);
@@ -34,9 +38,35 @@ export default function HomeScreen() {
     totalTaxesPercentage: 0,
   });
 
+  const [fullPayBreakdown, setFullPayBreakdown] = React.useState({
+    takeHomePay: 0,
+    taxableIncome: 0,
+    superannuation: 0,
+    totalTaxes: 0,
+  });
+
   const onSalaryChange = (salary: string) => {
-    setTaxBreakDown(calculateTaxBreakDown(salary));
+    const breakDown = calculateTaxBreakDown(salary);
+    setTaxBreakDown(breakDown);
+    const newFullPayBreakdown = calculateFullPayBreakdown(
+      breakDown.takeHomePay,
+      breakDown.totalTaxes,
+      0.11,
+      timePeriod
+    );
+    setFullPayBreakdown(newFullPayBreakdown);
     setSalary(salary);
+  };
+
+  const onTimerPeriodChange = (timePeriod: number) => {
+    const breakDown = calculateTaxBreakDown(salary);
+    const newFullPayBreakdown = calculateFullPayBreakdown(
+      breakDown.takeHomePay,
+      breakDown.totalTaxes,
+      0.11,
+      timePeriod
+    );
+    setFullPayBreakdown(newFullPayBreakdown);
   };
 
   return (
@@ -64,10 +94,10 @@ export default function HomeScreen() {
                 style={styles.picker}
                 onValueChange={(itemValue) => setTimePeriod(itemValue)}
               >
-                <Picker.Item label="Annually" value="Annually" />
-                <Picker.Item label="Monthly" value="Monthly" />
-                <Picker.Item label="Fortnightly" value="Fortnightly" />
-                <Picker.Item label="Weekly" value="Weekly" />
+                <Picker.Item label="Annually" value={1} />
+                <Picker.Item label="Monthly" value={1} />
+                <Picker.Item label="Fortnightly" value={1} />
+                <Picker.Item label="Weekly" value={1} />
               </Picker>
             </View>
           </View>
@@ -105,29 +135,45 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.tabsSection}>
-          <Button title="Weekly" color="#2196F3" accessibilityLabel="Weekly" />
+          <Button
+            title="Weekly"
+            color="#2196F3"
+            onPress={() => onTimerPeriodChange(52)}
+            accessibilityLabel="Weekly"
+          />
           <Button
             title="Fortnightly"
             color="#2196F3"
+            onPress={() => onTimerPeriodChange(26)}
             accessibilityLabel="Fortnightly"
           />
           <Button
             title="Monthly"
             color="#2196F3"
+            onPress={() => onTimerPeriodChange(12)}
             accessibilityLabel="Monthly"
           />
           <Button
             title="Annually"
             color="#2196F3"
+            onPress={() => onTimerPeriodChange(1)}
             accessibilityLabel="Annually"
           />
         </View>
 
         <View style={styles.resultSection}>
-          <Text style={styles.resultText}>Take home pay $1,241.40</Text>
-          <Text style={styles.resultText}>Taxable income $1,615.38</Text>
-          <Text style={styles.resultText}>Superannuation $177.69</Text>
-          <Text style={styles.resultText}>Total taxes $373.98</Text>
+          <Text style={styles.resultText}>
+            Take home pay ${fullPayBreakdown.takeHomePay.toFixed(2)}
+          </Text>
+          <Text style={styles.resultText}>
+            Taxable income ${fullPayBreakdown.taxableIncome.toFixed(2)}
+          </Text>
+          <Text style={styles.resultText}>
+            Superannuation ${fullPayBreakdown.superannuation.toFixed(2)}
+          </Text>
+          <Text style={styles.resultText}>
+            Total taxes ${fullPayBreakdown.totalTaxes.toFixed(2)}
+          </Text>
         </View>
 
         <View style={styles.breakdownSection}>

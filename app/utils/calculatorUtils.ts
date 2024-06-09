@@ -1,3 +1,5 @@
+import { PeriodKey, PERIODS } from "@/constants/Period";
+
 export function calculateTaxBreakDown(income: string): {
   takeHomePay: number;
   totalTaxes: number;
@@ -50,47 +52,19 @@ export function calculateTaxBreakDown(income: string): {
   return result;
 }
 
-interface PayBreakdown {
-  takeHomePay: number;
-  taxableIncome: number;
-  superannuation: number;
-  totalTaxes: number;
-}
-
-interface PayCalculation {
-  annual: PayBreakdown;
-  monthly: PayBreakdown;
-  fortnightly: PayBreakdown;
-  weekly: PayBreakdown;
-}
-
-const SUPERANNUATION_RATE = 0.11; // 11% superannuation
-
-export function calculateFullPayBreakdown(income: string): PayCalculation {
-  const annualIncome = parseInt(income, 10);
-
-  const calculatePayBreakdown = (annualIncome: number): PayBreakdown => {
-    const superannuation = annualIncome * SUPERANNUATION_RATE;
-    const taxableIncome = annualIncome - superannuation;
-    const { takeHomePay, totalTaxes } = calculateTaxBreakDown(taxableIncome);
-
-    return {
-      takeHomePay,
-      taxableIncome,
-      superannuation,
-      totalTaxes,
-    };
-  };
-
-  const annualBreakdown = calculatePayBreakdown(annualIncome);
-  const monthlyBreakdown = calculatePayBreakdown(annualIncome / 12);
-  const fortnightlyBreakdown = calculatePayBreakdown(annualIncome / 26);
-  const weeklyBreakdown = calculatePayBreakdown(annualIncome / 52);
+export function calculateFullPayBreakdown(
+  takeHomePay: number,
+  totalTaxes: number,
+  superRate: number,
+  timePeriod: number
+) {
+  const taxableIncome = takeHomePay + totalTaxes;
+  const superannuation = taxableIncome * superRate;
 
   return {
-    annual: annualBreakdown,
-    monthly: monthlyBreakdown,
-    fortnightly: fortnightlyBreakdown,
-    weekly: weeklyBreakdown,
+    takeHomePay: takeHomePay / timePeriod,
+    taxableIncome: taxableIncome / timePeriod,
+    superannuation: superannuation / timePeriod,
+    totalTaxes: totalTaxes / timePeriod,
   };
 }
